@@ -1,34 +1,70 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
 import { mockEvents } from "../data/mockEvents";
+
+const categorias = ["Todas", "Arte", "Música", "Talleres", "Cine"];
 
 function Home() {
   const navigate = useNavigate();
+  const [busqueda, setBusqueda] = useState("");
+  const [categoriaActiva, setCategoriaActiva] = useState("Todas");
+
+  const eventosFiltrados = mockEvents.filter((evento) => {
+    const coincideTexto = evento.titulo.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideCategoria = categoriaActiva === "Todas" || evento.categoria === categoriaActiva;
+    return coincideTexto && coincideCategoria;
+  });
 
   return (
+    <>
+    <Header />
     <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.logo}>Solee</h1>
         <p style={styles.tagline}>Experiencias culturales y comunitarias cerca de ti</p>
-      </header>
 
-      <div style={styles.grid}>
-        {mockEvents.map((evento) => (
-          <div
-            key={evento.id}
-            style={styles.card}
-            onClick={() => navigate(`/evento/${evento.id}`)}
+      <input
+        style={styles.searchInput}
+        type="text"
+        placeholder="Buscar actividades..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+      />
+
+      <div style={styles.chips}>
+        {categorias.map((cat) => (
+          <button
+            key={cat}
+            style={categoriaActiva === cat ? styles.chipActive : styles.chip}
+            onClick={() => setCategoriaActiva(cat)}
           >
-            <img src={evento.imagen} alt={evento.titulo} style={styles.image} />
-            <div style={styles.cardBody}>
-              <span style={styles.badge}>{evento.categoria}</span>
-              <h3 style={styles.cardTitle}>{evento.titulo}</h3>
-              <p style={styles.cardInfo}>📅 {evento.fecha} · {evento.hora}</p>
-              <p style={styles.cardInfo}>📍 {evento.ubicacion}</p>
-            </div>
-          </div>
+            {cat}
+          </button>
         ))}
       </div>
+
+      {eventosFiltrados.length === 0 ? (
+        <p style={styles.noResults}>Sin actividades disponibles con estos filtros.</p>
+      ) : (
+        <div style={styles.grid}>
+          {eventosFiltrados.map((evento) => (
+            <div
+              key={evento.id}
+              style={styles.card}
+              onClick={() => navigate(`/evento/${evento.id}`)}
+            >
+              <img src={evento.imagen} alt={evento.titulo} style={styles.image} />
+              <div style={styles.cardBody}>
+                <span style={styles.badge}>{evento.categoria}</span>
+                <h3 style={styles.cardTitle}>{evento.titulo}</h3>
+                <p style={styles.cardInfo}>📅 {evento.fecha} · {evento.hora}</p>
+                <p style={styles.cardInfo}>📍 {evento.ubicacion}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
+    </>
   );
 }
 
@@ -37,20 +73,61 @@ const styles = {
     maxWidth: "900px",
     margin: "0 auto",
     padding: "20px",
-    fontFamily: "Arial, sans-serif",
-  },
+    fontFamily: "'Poppins', Arial, sans-serif",
+    minHeight: "100vh",
+    background: "linear-gradient(180deg, #f0eefc 0%, #f5f5f7 300px)",
+    },
   header: {
     textAlign: "center",
-    marginBottom: "30px",
+    marginBottom: "20px",
   },
   logo: {
-    color: "#534AB7",
+    color: "#D3A47D",
     fontSize: "32px",
     marginBottom: "4px",
   },
   tagline: {
     color: "#666",
     fontSize: "14px",
+  },
+  searchInput: {
+    width: "100%",
+    padding: "12px 16px",
+    borderRadius: "10px",
+    border: "1px solid #ccc",
+    fontSize: "15px",
+    marginBottom: "14px",
+    boxSizing: "border-box",
+  },
+  chips: {
+    display: "flex",
+    gap: "8px",
+    marginBottom: "24px",
+    flexWrap: "wrap",
+  },
+  chip: {
+    padding: "8px 16px",
+    borderRadius: "20px",
+    border: "1px solid #ccc",
+    background: "white",
+    color: "#666",
+    cursor: "pointer",
+    fontSize: "13px",
+  },
+  chipActive: {
+    padding: "8px 16px",
+    borderRadius: "20px",
+    border: "1px solid #D3A47D",
+    background: "#D3A47D",
+    color: "white",
+    cursor: "pointer",
+    fontSize: "13px",
+    fontWeight: "bold",
+  },
+  noResults: {
+    textAlign: "center",
+    color: "#888",
+    marginTop: "40px",
   },
   grid: {
     display: "grid",
@@ -63,7 +140,6 @@ const styles = {
     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
     cursor: "pointer",
     background: "white",
-    transition: "transform 0.15s",
   },
   image: {
     width: "100%",
@@ -75,7 +151,7 @@ const styles = {
   },
   badge: {
     display: "inline-block",
-    background: "#534AB7",
+    background: "#D3A47D",
     color: "white",
     fontSize: "11px",
     padding: "3px 10px",

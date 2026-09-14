@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import Header from "../components/Header";
 import { mockEvents } from "../data/mockEvents";
 
 function DetalleEvento() {
@@ -11,6 +12,8 @@ function DetalleEvento() {
   }
 
   return (
+    <>
+    <Header />
     <div style={styles.container}>
       <button style={styles.backButton} onClick={() => navigate("/home")}>
         ← Volver
@@ -35,6 +38,7 @@ function DetalleEvento() {
         <button style={styles.joinButton}>Quiero participar</button>
       </div>
     </div>
+    </>
   );
 }
 
@@ -42,7 +46,7 @@ const styles = {
   container: {
     maxWidth: "600px",
     margin: "0 auto",
-    fontFamily: "Arial, sans-serif",
+    fontFamily: "'Poppins', Arial, sans-serif",
   },
   backButton: {
     margin: "16px 0 0 16px",
@@ -51,7 +55,7 @@ const styles = {
     border: "1px solid #ccc",
     borderRadius: "8px",
     cursor: "pointer",
-    color: "#534AB7",
+    color: "#D3A47D",
   },
   image: {
     width: "100%",
@@ -63,7 +67,7 @@ const styles = {
   },
   badge: {
     display: "inline-block",
-    background: "#534AB7",
+    background: "#D3A47D",
     color: "white",
     fontSize: "12px",
     padding: "4px 12px",
@@ -102,7 +106,7 @@ const styles = {
     padding: "14px",
     borderRadius: "8px",
     border: "none",
-    background: "#6B1C2E",
+    background: "#F19195",
     color: "white",
     fontSize: "16px",
     fontWeight: "bold",

@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import bg1 from "../assets/bg1.jpg"
+import bg2 from "../assets/bg2.jpg"
+import bg3 from "../assets/bg3.jpg"
+
 
 function Login() {
   const [modo, setModo] = useState("login"); // "login" o "registro"
@@ -11,17 +15,22 @@ function Login() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Prototipo: sin backend aún, solo navegamos a Home
-    navigate("/home");
-  };
+    const handleSubmit = (e) => {
+     e.preventDefault();
+        if (tipoUsuario === "organizador") {
+            navigate("/panel-organizador");
+        } else {
+            navigate("/home");
+        }
+    };
 
   return (
     <div style={styles.container}>
+    <div style={styles.content}>
       <h1 style={styles.logo}>Solee</h1>
       <p style={styles.subtitle}>Descubre experiencias culturales y comunitarias en Santiago</p>
 
+    <div style={styles.card}>
       <div style={styles.tabs}>
         <button
           style={modo === "login" ? styles.tabActive : styles.tab}
@@ -36,7 +45,7 @@ function Login() {
           Registrarse
         </button>
       </div>
-
+    
       <form onSubmit={handleSubmit} style={styles.form}>
         {modo === "registro" && (
           <input
@@ -65,55 +74,76 @@ function Login() {
           onChange={handleChange}
         />
 
-        {modo === "registro" && (
+        
           <div style={styles.roleSelector}>
-            <p style={styles.roleLabel}>Quiero registrarme como:</p>
+             <p style={styles.roleLabel}>
+                {modo === "login" ? "Ingresar como:" : "Quiero registrarme como:"}
+            </p>
             <div style={styles.roleOptions}>
-              <button
+                <button
                 type="button"
                 style={tipoUsuario === "participante" ? styles.roleActive : styles.role}
                 onClick={() => setTipoUsuario("participante")}
-              >
+                >
                 Participante
-              </button>
-              <button
+                </button>
+                <button
                 type="button"
                 style={tipoUsuario === "organizador" ? styles.roleActive : styles.role}
                 onClick={() => setTipoUsuario("organizador")}
-              >
+                >
                 Organizador
-              </button>
+                </button>
             </div>
-          </div>
-        )}
+            </div>
+        
 
         <button type="submit" style={styles.submitButton}>
           {modo === "login" ? "Iniciar sesión" : "Crear cuenta"}
         </button>
       </form>
+      </div>
+    </div>
     </div>
   );
 }
 
 const styles = {
   container: {
-    maxWidth: "400px",
-    margin: "0 auto",
-    padding: "40px 20px",
-    fontFamily: "Arial, sans-serif",
+    minHeight: "100vh",
+    width: "100%",
+    boxSizing: "border-box",
+    backgroundImage: `linear-gradient(rgba(211,164,125,0.5), rgba(241,145,149,0.5)), url(${bg3})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    fontFamily: "'Poppins', Arial, sans-serif",
+    padding: "20px",
+    },
+  card: {
+    background: "white",
+    borderRadius: "16px",
+    padding: "24px",
+    boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
   },
   logo: {
-    color: "#534AB7",
+    color: "white",
     textAlign: "center",
     fontSize: "36px",
     marginBottom: "4px",
   },
   subtitle: {
     textAlign: "center",
-    color: "#666",
+    color: "white",
     fontSize: "14px",
     marginBottom: "30px",
   },
+  content: {
+    maxWidth: "400px",
+    width: "100%",
+    },
   tabs: {
     display: "flex",
     marginBottom: "24px",
@@ -134,8 +164,8 @@ const styles = {
     padding: "12px",
     background: "none",
     border: "none",
-    borderBottom: "3px solid #534AB7",
-    color: "#534AB7",
+    borderBottom: "3px solid #D3A47D",
+    color: "#D3A47D",
     fontWeight: "bold",
     cursor: "pointer",
     fontSize: "15px",
@@ -176,8 +206,8 @@ const styles = {
     flex: 1,
     padding: "10px",
     borderRadius: "8px",
-    border: "1px solid #534AB7",
-    background: "#534AB7",
+    border: "1px solid #D3A47D",
+    background: "#D3A47D",
     color: "white",
     cursor: "pointer",
     fontWeight: "bold",
@@ -187,7 +217,7 @@ const styles = {
     padding: "14px",
     borderRadius: "8px",
     border: "none",
-    background: "#6B1C2E",
+    background: "#F19195",
     color: "white",
     fontSize: "16px",
     fontWeight: "bold",
