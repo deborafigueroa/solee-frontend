@@ -3,26 +3,54 @@ import { useNavigate } from "react-router-dom";
 import bg1 from "../assets/bg1.jpg"
 import bg2 from "../assets/bg2.jpg"
 import bg3 from "../assets/bg3.jpg"
+import api from "../api/axiosConfig";
 
 
 function Login() {
   const [modo, setModo] = useState("login"); // "login" o "registro"
   const [tipoUsuario, setTipoUsuario] = useState("participante");
   const [formData, setFormData] = useState({ nombre: "", email: "", password: "" });
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-    const handleSubmit = (e) => {
-     e.preventDefault();
-        if (tipoUsuario === "organizador") {
-            navigate("/panel-organizador");
-        } else {
-            navigate("/home");
-        }
-    };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      if (modo === "registro") {
+        const response = await api.post("/auth/register", {
+          nombre: formData.nombre,
+          email: formData.email,
+          password: formData.password,
+          rol: tipoUsuario,
+        });
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("usuario", JSON.stringify(response.data.usuario));
+      } else {
+        const response = await api.post("/auth/login", {
+          email: formData.email,
+          password: formData.password,
+        });
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("usuario", JSON.stringify(response.data.usuario));
+      }
+
+      if (tipoUsuario === "organizador") {
+        navigate("/panel-organizador");
+      } else {
+        navigate("/home");
+      }
+    } catch (err) {
+      const mensaje = err.response?.data?.mensaje || "Error de conexión con el servidor";
+      setError(mensaje);
+    }
+  };
 
   return (
     <div style={styles.container}>
@@ -97,6 +125,7 @@ function Login() {
             </div>
             </div>
         
+        {error && <p style={styles.errorText}>{error}</p>}
 
         <button type="submit" style={styles.submitButton}>
           {modo === "login" ? "Iniciar sesión" : "Crear cuenta"}
@@ -222,6 +251,12 @@ const styles = {
     fontSize: "16px",
     fontWeight: "bold",
     cursor: "pointer",
+  },
+  errorText: {
+  color: "#c0392b",
+  fontSize: "13px",
+  textAlign: "center",
+  margin: "0",
   },
 };
 
