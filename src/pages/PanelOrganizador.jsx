@@ -1,14 +1,16 @@
 import Header from "../components/Header";
 import { misActividadesOrganizador } from "../data/mockEvents";
+import { useNavigate } from "react-router-dom";
 
 function PanelOrganizador() {
+  const navigate = useNavigate();
   return (
     <>
       <Header />
       <div style={styles.container}>
         <div style={styles.topBar}>
           <h1 style={styles.title}>Mis Actividades</h1>
-          <button style={styles.newButton}>+ Nueva Actividad</button>
+          <button style={styles.newButton} onClick={() => navigate("/nueva-actividad")}>+ Nueva Actividad</button>
         </div>
 
         <div style={styles.statsRow}>
