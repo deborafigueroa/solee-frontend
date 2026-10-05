@@ -19,38 +19,31 @@ function Login() {
 
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    try {
-      if (modo === "registro") {
-        const response = await api.post("/auth/register", {
-          nombre: formData.nombre,
-          email: formData.email,
-          password: formData.password,
-          rol: tipoUsuario,
-        });
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("usuario", JSON.stringify(response.data.usuario));
-      } else {
-        const response = await api.post("/auth/login", {
-          email: formData.email,
-          password: formData.password,
-        });
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("usuario", JSON.stringify(response.data.usuario));
-      }
+  try {
+    const endpoint = modo === "registro" ? "/auth/register" : "/auth/login";
+    const payload =
+      modo === "registro"
+        ? { nombre: formData.nombre, email: formData.email, password: formData.password, rol: tipoUsuario }
+        : { email: formData.email, password: formData.password };
 
-      if (tipoUsuario === "organizador") {
-        navigate("/panel-organizador");
-      } else {
-        navigate("/home");
-      }
-    } catch (err) {
-      const mensaje = err.response?.data?.mensaje || "Error de conexión con el servidor";
-      setError(mensaje);
+    const response = await api.post(endpoint, payload);
+    const { token, usuario } = response.data;
+
+    if (modo === "login" && usuario.rol !== tipoUsuario) {
+      setError(`Esta cuenta es de tipo ${usuario.rol}. Selecciona ese rol para ingresar.`);
+      return;
     }
-  };
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("usuario", JSON.stringify(usuario));
+    navigate(usuario.rol === "organizador" ? "/panel-organizador" : "/home");
+  } catch (err) {
+    setError(err.response?.data?.mensaje || "Error de conexión con el servidor");
+  }
+};
 
   return (
     <div style={styles.container}>
