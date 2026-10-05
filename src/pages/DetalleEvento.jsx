@@ -1,43 +1,65 @@
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
-import { mockEvents } from "../data/mockEvents";
+import api from "../api/axiosConfig";
 
 function DetalleEvento() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const evento = mockEvents.find((e) => e.id === parseInt(id));
+  const [evento, setEvento] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!evento) {
-    return <p style={{ textAlign: "center", marginTop: "40px" }}>Evento no encontrado.</p>;
+  useEffect(() => {
+    const obtenerEvento = async () => {
+      try {
+        const response = await api.get(`/actividades/${id}`);
+        setEvento(response.data);
+      } catch (err) {
+        setError("Evento no encontrado.");
+      } finally {
+        setCargando(false);
+      }
+    };
+    obtenerEvento();
+  }, [id]);
+
+  if (cargando) {
+    return <p style={{ textAlign: "center", marginTop: "40px" }}>Cargando...</p>;
+  }
+
+  if (error || !evento) {
+    return <p style={{ textAlign: "center", marginTop: "40px" }}>{error || "Evento no encontrado."}</p>;
   }
 
   return (
     <>
-    <Header />
-    <div style={styles.container}>
-      <button style={styles.backButton} onClick={() => navigate("/home")}>
-        ← Volver
-      </button>
+      <Header />
+      <div style={styles.container}>
+        <button style={styles.backButton} onClick={() => navigate("/home")}>
+          ← Volver
+        </button>
 
-      <img src={evento.imagen} alt={evento.titulo} style={styles.image} />
+        <div style={styles.content}>
+          <span style={styles.badge}>{evento.disciplina}</span>
+          <h1 style={styles.title}>{evento.titulo}</h1>
 
-      <div style={styles.content}>
-        <span style={styles.badge}>{evento.categoria}</span>
-        <h1 style={styles.title}>{evento.titulo}</h1>
+          <div style={styles.infoRow}>
+            <p style={styles.info}>
+              📅 {new Date(evento.fechaInicio).toLocaleDateString("es-CL")} · {evento.horario}
+            </p>
+            <p style={styles.info}>📍 {evento.direccionTexto}</p>
+            <p style={styles.info}>👥 {evento.cuposDisponibles} cupos disponibles</p>
+            <p style={styles.info}>💰 {evento.precio === 0 ? "Gratis" : `$${evento.precio} CLP`}</p>
+            <p style={styles.info}>🎯 Nivel: {evento.nivel}</p>
+          </div>
 
-        <div style={styles.infoRow}>
-          <p style={styles.info}>📅 {evento.fecha} · {evento.hora}</p>
-          <p style={styles.info}>📍 {evento.ubicacion}</p>
-          <p style={styles.info}>👥 {evento.cupos} cupos disponibles</p>
-          <p style={styles.info}>🏢 Organiza: {evento.organizador}</p>
+          <h3 style={styles.sectionTitle}>Descripción</h3>
+          <p style={styles.description}>{evento.descripcion}</p>
+
+          <button style={styles.joinButton}>Quiero participar</button>
         </div>
-
-        <h3 style={styles.sectionTitle}>Descripción</h3>
-        <p style={styles.description}>{evento.descripcion}</p>
-
-        <button style={styles.joinButton}>Quiero participar</button>
       </div>
-    </div>
     </>
   );
 }
@@ -56,11 +78,6 @@ const styles = {
     borderRadius: "8px",
     cursor: "pointer",
     color: "#D3A47D",
-  },
-  image: {
-    width: "100%",
-    height: "260px",
-    objectFit: "cover",
   },
   content: {
     padding: "20px",

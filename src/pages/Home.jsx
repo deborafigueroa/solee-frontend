@@ -1,69 +1,94 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
-import { mockEvents } from "../data/mockEvents";
+import api from "../api/axiosConfig";
 
-const categorias = ["Todas", "Arte", "Música", "Talleres", "Cine"];
+const categorias = ["Todas", "música", "danza", "teatro", "artes visuales", "escritura", "fotografía", "cerámica", "tejido", "otros"];
 
 function Home() {
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState("");
   const [categoriaActiva, setCategoriaActiva] = useState("Todas");
+  const [eventos, setEventos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
 
-  const eventosFiltrados = mockEvents.filter((evento) => {
-    const coincideTexto = evento.titulo.toLowerCase().includes(busqueda.toLowerCase());
-    const coincideCategoria = categoriaActiva === "Todas" || evento.categoria === categoriaActiva;
-    return coincideTexto && coincideCategoria;
-  });
+  useEffect(() => {
+    buscarEventos();
+  }, [categoriaActiva]);
+
+  const buscarEventos = async () => {
+    setCargando(true);
+    setError("");
+    try {
+      const params = {};
+      if (categoriaActiva !== "Todas") params.disciplina = categoriaActiva;
+
+      const response = await api.get("/actividades", { params });
+      setEventos(response.data.actividades);
+    } catch (err) {
+      setError("No se pudieron cargar las actividades. ¿Está el servidor corriendo?");
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const eventosFiltrados = eventos.filter((evento) =>
+    evento.titulo.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   return (
     <>
-    <Header />
-    <div style={styles.container}>
+      <Header />
+      <div style={styles.container}>
         <p style={styles.tagline}>Experiencias culturales y comunitarias cerca de ti</p>
 
-      <input
-        style={styles.searchInput}
-        type="text"
-        placeholder="Buscar actividades..."
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-      />
+        <input
+          style={styles.searchInput}
+          type="text"
+          placeholder="Buscar actividades..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
 
-      <div style={styles.chips}>
-        {categorias.map((cat) => (
-          <button
-            key={cat}
-            style={categoriaActiva === cat ? styles.chipActive : styles.chip}
-            onClick={() => setCategoriaActiva(cat)}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      {eventosFiltrados.length === 0 ? (
-        <p style={styles.noResults}>Sin actividades disponibles con estos filtros.</p>
-      ) : (
-        <div style={styles.grid}>
-          {eventosFiltrados.map((evento) => (
-            <div
-              key={evento.id}
-              style={styles.card}
-              onClick={() => navigate(`/evento/${evento.id}`)}
+        <div style={styles.chips}>
+          {categorias.map((cat) => (
+            <button
+              key={cat}
+              style={categoriaActiva === cat ? styles.chipActive : styles.chip}
+              onClick={() => setCategoriaActiva(cat)}
             >
-              <img src={evento.imagen} alt={evento.titulo} style={styles.image} />
-              <div style={styles.cardBody}>
-                <span style={styles.badge}>{evento.categoria}</span>
-                <h3 style={styles.cardTitle}>{evento.titulo}</h3>
-                <p style={styles.cardInfo}>📅 {evento.fecha} · {evento.hora}</p>
-                <p style={styles.cardInfo}>📍 {evento.ubicacion}</p>
-              </div>
-            </div>
+              {cat}
+            </button>
           ))}
         </div>
-      )}
-    </div>
+
+        {cargando && <p style={styles.noResults}>Cargando actividades...</p>}
+        {error && <p style={styles.noResults}>{error}</p>}
+
+        {!cargando && !error && eventosFiltrados.length === 0 ? (
+          <p style={styles.noResults}>Sin actividades disponibles con estos filtros.</p>
+        ) : (
+          <div style={styles.grid}>
+            {eventosFiltrados.map((evento) => (
+              <div
+                key={evento._id}
+                style={styles.card}
+                onClick={() => navigate(`/evento/${evento._id}`)}
+              >
+                <div style={styles.cardBody}>
+                  <span style={styles.badge}>{evento.disciplina}</span>
+                  <h3 style={styles.cardTitle}>{evento.titulo}</h3>
+                  <p style={styles.cardInfo}>
+                    📅 {new Date(evento.fechaInicio).toLocaleDateString("es-CL")}
+                  </p>
+                  <p style={styles.cardInfo}>📍 {evento.direccionTexto}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </>
   );
 }
@@ -76,19 +101,12 @@ const styles = {
     fontFamily: "'Poppins', Arial, sans-serif",
     minHeight: "100vh",
     background: "linear-gradient(180deg, #f0eefc 0%, #f5f5f7 300px)",
-    },
-  header: {
-    textAlign: "center",
-    marginBottom: "20px",
-  },
-  logo: {
-    color: "#D3A47D",
-    fontSize: "32px",
-    marginBottom: "4px",
   },
   tagline: {
+    textAlign: "center",
     color: "#666",
     fontSize: "14px",
+    marginBottom: "20px",
   },
   searchInput: {
     width: "100%",
@@ -140,11 +158,6 @@ const styles = {
     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
     cursor: "pointer",
     background: "white",
-  },
-  image: {
-    width: "100%",
-    height: "160px",
-    objectFit: "cover",
   },
   cardBody: {
     padding: "14px",
