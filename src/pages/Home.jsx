@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import api from "../api/axiosConfig";
+import MapaActividades from "../components/MapaActividades";
 
 const categorias = ["Todas", "música", "danza", "teatro", "artes visuales", "escritura", "fotografía", "cerámica", "tejido", "otros"];
 const niveles = ["", "principiante", "intermedio", "avanzado", "todos los niveles"];
@@ -22,6 +23,7 @@ function Home() {
   const [error, setError] = useState("");
   const [ubicacion, setUbicacion] = useState(null);
   const [radioKm, setRadioKm] = useState(5);
+  const [vista, setVista] = useState("lista");
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false);
   const [errorUbicacion, setErrorUbicacion] = useState("");
 
@@ -179,13 +181,43 @@ function Home() {
           ))}
         </div>
 
+        <div style={styles.viewToggle}>
+          <button style={vista === "lista" ? styles.viewActive : styles.viewBtn} onClick={() => setVista("lista")}>
+            Lista
+          </button>
+          <button style={vista === "mapa" ? styles.viewActive : styles.viewBtn} onClick={() => setVista("mapa")}>
+            Mapa
+          </button>
+        </div>
+
+        {vista === "mapa" && (
+          <div style={styles.mapControls}>
+            <button
+              type="button"
+              style={ubicacion ? styles.geoActive : styles.geoButton}
+              onClick={alternarUbicacion}
+              disabled={buscandoUbicacion}
+            >
+              {buscandoUbicacion ? "Obteniendo ubicación..." : ubicacion ? "Quitar mi ubicación" : "Usar mi ubicación"}
+            </button>
+            {ubicacion && (
+              <select style={styles.select} value={radioKm} onChange={(e) => setRadioKm(Number(e.target.value))}>
+                {[1, 3, 5, 10, 20].map((km) => (
+                  <option key={km} value={km}>Radio de {km} km</option>
+                ))}
+              </select>
+            )}
+            {errorUbicacion && <p style={styles.geoError}>{errorUbicacion}</p>}
+          </div>
+        )}
+
         {cargando && <p style={styles.noResults}>Cargando actividades...</p>}
         {error && <p style={styles.noResults}>{error}</p>}
 
         {!cargando && !error && eventosFiltrados.length === 0 && (
           <p style={styles.noResults}>Sin actividades disponibles con estos filtros.</p>
         )}
-
+        {vista === "lista" && (
         <div style={styles.grid}>
           {eventosFiltrados.map((evento) => (
             <div
@@ -210,6 +242,15 @@ function Home() {
             </div>
           ))}
         </div>
+        )}
+        {vista === "mapa" && (
+          <MapaActividades
+            actividades={eventosFiltrados}
+            ubicacion={ubicacion}
+            radioKm={radioKm}
+            onVerDetalle={(id) => navigate(`/evento/${id}`)}
+          />
+        )}
       </div>
     </>
   );
@@ -337,6 +378,27 @@ const styles = {
     fontFamily: "'Poppins', Arial, sans-serif",
   },
   geoError: { color: "#c0392b", fontSize: "12px", margin: 0 },
+    viewToggle: { display: "flex", gap: "8px", marginBottom: "14px" },
+  viewBtn: {
+    padding: "8px 20px",
+    borderRadius: "20px",
+    border: "1px solid #ccc",
+    background: "white",
+    color: "#666",
+    cursor: "pointer",
+    fontFamily: "'Poppins', Arial, sans-serif",
+  },
+  viewActive: {
+    padding: "8px 20px",
+    borderRadius: "20px",
+    border: "1px solid #F19195",
+    background: "#F19195",
+    color: "white",
+    fontWeight: "bold",
+    cursor: "pointer",
+    fontFamily: "'Poppins', Arial, sans-serif",
+  },
+  mapControls: { display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", marginBottom: "14px" },
 };
 
 export default Home;
