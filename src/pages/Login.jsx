@@ -61,7 +61,7 @@ function Login() {
         </button>
         <button
           style={modo === "registro" ? styles.tabActive : styles.tab}
-          onClick={() => setModo("registro")}
+          onClick={() => navigate("/registro")}
         >
           Registrarse
         </button>
