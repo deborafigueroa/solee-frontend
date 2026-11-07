@@ -64,7 +64,7 @@ function MapaActividades({ actividades, ubicacion, radioKm, onVerDetalle }) {
     };
   }, []);
 
-  // Redibujar pines y radio cuando cambian los datos
+    // Redibujar pines y radio cuando cambian los datos
   useEffect(() => {
     const mapa = mapaRef.current;
     const capa = capaRef.current;
@@ -84,12 +84,14 @@ function MapaActividades({ actividades, ubicacion, radioKm, onVerDetalle }) {
     });
 
     if (ubicacion) {
-      L.circle([ubicacion.lat, ubicacion.lng], {
-        radius: radioKm * 1000,
-        color: "#D3A47D",
-        fillColor: "#D3A47D",
-        fillOpacity: 0.15,
-      }).addTo(capa);
+      if (radioKm) {
+        L.circle([ubicacion.lat, ubicacion.lng], {
+          radius: radioKm * 1000,
+          color: "#D3A47D",
+          fillColor: "#D3A47D",
+          fillOpacity: 0.15,
+        }).addTo(capa);
+      }
       L.circleMarker([ubicacion.lat, ubicacion.lng], {
         radius: 7,
         color: "white",
@@ -99,9 +101,18 @@ function MapaActividades({ actividades, ubicacion, radioKm, onVerDetalle }) {
       })
         .addTo(capa)
         .bindTooltip("Tu ubicación");
-      mapa.fitBounds(L.latLng(ubicacion.lat, ubicacion.lng).toBounds(radioKm * 2000), {
-        padding: [20, 20],
-      });
+
+      if (radioKm) {
+        mapa.fitBounds(L.latLng(ubicacion.lat, ubicacion.lng).toBounds(radioKm * 2000), {
+          padding: [20, 20],
+        });
+      } else {
+        // Sin radio: encuadrar tu posición y las 5 actividades más cercanas
+        mapa.fitBounds([[ubicacion.lat, ubicacion.lng], ...puntos.slice(0, 5)], {
+          padding: [40, 40],
+          maxZoom: 15,
+        });
+      }
     } else if (puntos.length > 0) {
       mapa.fitBounds(puntos, { padding: [40, 40], maxZoom: 15 });
     }

@@ -45,6 +45,10 @@ const secciones = [
     titulo: "11. Cambios",
     texto: "Podemos actualizar esta política. Cuando haya cambios relevantes lo informaremos en la plataforma.",
   },
+  {
+    titulo: "12. Ubicación y mapas",
+    texto: "Si autorizas el acceso a la ubicación de tu dispositivo, la usamos solo mientras navegas para mostrarte las actividades cercanas y su distancia, y no la guardamos en tu cuenta. Puedes retirar el permiso en la configuración de tu navegador. Para mostrar mapas y ubicar direcciones usamos servicios de OpenStreetMap, a los que se envían las direcciones que se buscan.",
+  },
 ];
 
 function Privacidad() {
