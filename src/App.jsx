@@ -7,6 +7,7 @@ import RutaProtegida from "./components/RutaProtegida";
 import NuevaActividad from "./pages/NuevaActividad";
 import Registro from "./pages/Registro";
 import Privacidad from "./pages/Privacidad";
+import MisReservas from "./pages/MisReservas";
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Route path="/home" element={<RutaProtegida><Home /></RutaProtegida>} />
         <Route path="/evento/:id" element={<RutaProtegida><DetalleEvento /></RutaProtegida>} />
         <Route path="/panel-organizador" element={<RutaProtegida rol="organizador"><PanelOrganizador /></RutaProtegida>}/>
+        <Route path="/mis-reservas" element={<RutaProtegida rol="participante"><MisReservas /></RutaProtegida>}/>
         <Route path="/nueva-actividad" element={<RutaProtegida rol="organizador"><NuevaActividad /></RutaProtegida>}/>
         <Route path="/editar-actividad/:id" element={<RutaProtegida rol="organizador"><NuevaActividad /></RutaProtegida>}/>
         <Route path="/registro" element={<Registro />} />

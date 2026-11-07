@@ -16,6 +16,9 @@ function Header() {
 
   return (
     <div style={styles.header}>
+      {usuario?.rol === "participante" && (
+        <button style={styles.reservas} onClick={() => navigate("/mis-reservas")}>Mis reservas</button>
+      )}
       <span style={styles.logo} onClick={irAlInicio}>Solee</span>
       {usuario && (
         <div style={styles.user}>
@@ -27,6 +30,7 @@ function Header() {
   );
 }
 
+const font = "'Poppins', Arial, sans-serif";
 const styles = {
   header: {
     position: "relative",
@@ -36,36 +40,11 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
   },
-  logo: {
-    color: "white",
-    fontSize: "22px",
-    fontWeight: "700",
-    fontFamily: "'Poppins', Arial, sans-serif",
-    letterSpacing: "1px",
-    cursor: "pointer",
-  },
-  user: {
-    position: "absolute",
-    right: "16px",
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-  },
-  userName: {
-    color: "white",
-    fontSize: "13px",
-    fontFamily: "'Poppins', Arial, sans-serif",
-  },
-  logout: {
-    background: "rgba(255,255,255,0.25)",
-    border: "none",
-    color: "white",
-    borderRadius: "8px",
-    padding: "6px 12px",
-    cursor: "pointer",
-    fontFamily: "'Poppins', Arial, sans-serif",
-    fontSize: "12px",
-  },
+  logo: { color: "white", fontSize: "22px", fontWeight: "700", fontFamily: font, letterSpacing: "1px", cursor: "pointer" },
+  reservas: { position: "absolute", left: "16px", background: "rgba(255,255,255,0.25)", border: "none", color: "white", borderRadius: "8px", padding: "6px 12px", cursor: "pointer", fontFamily: font, fontSize: "12px" },
+  user: { position: "absolute", right: "16px", display: "flex", alignItems: "center", gap: "10px" },
+  userName: { color: "white", fontSize: "13px", fontFamily: font },
+  logout: { background: "rgba(255,255,255,0.25)", border: "none", color: "white", borderRadius: "8px", padding: "6px 12px", cursor: "pointer", fontFamily: font, fontSize: "12px" },
 };
 
 export default Header;
