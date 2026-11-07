@@ -20,8 +20,12 @@ function Home() {
   const [eventos, setEventos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
+  const [ubicacion, setUbicacion] = useState(null);
+  const [radioKm, setRadioKm] = useState(5);
+  const [buscandoUbicacion, setBuscandoUbicacion] = useState(false);
+  const [errorUbicacion, setErrorUbicacion] = useState("");
 
-  const filtrosActivos = [nivel, modalidad, horario, soloGratis].filter(Boolean).length;
+  const filtrosActivos = [nivel, modalidad, horario, soloGratis, ubicacion].filter(Boolean).length;
 
   useEffect(() => {
     const buscarEventos = async () => {
@@ -34,6 +38,11 @@ function Home() {
         if (modalidad) params.modalidad = modalidad;
         if (horario) params.horario = horario;
         if (soloGratis) params.precioMax = 0;
+        if (ubicacion) {
+          params.lat = ubicacion.lat;
+          params.lng = ubicacion.lng;
+          params.radioKm = radioKm;
+        }
 
         const response = await api.get("/actividades", { params });
         setEventos(response.data.actividades);
@@ -44,13 +53,38 @@ function Home() {
       }
     };
     buscarEventos();
-  }, [categoriaActiva, nivel, modalidad, horario, soloGratis]);
+  }, [categoriaActiva, nivel, modalidad, horario, soloGratis, ubicacion, radioKm]);
+
+  const alternarUbicacion = () => {
+    if (ubicacion) {
+      setUbicacion(null);
+      return;
+    }
+    if (!navigator.geolocation) {
+      setErrorUbicacion("Tu navegador no permite obtener la ubicación.");
+      return;
+    }
+    setBuscandoUbicacion(true);
+    setErrorUbicacion("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUbicacion({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setBuscandoUbicacion(false);
+      },
+      () => {
+        setErrorUbicacion("No pudimos obtener tu ubicación. Revisa el permiso del navegador.");
+        setBuscandoUbicacion(false);
+      },
+      { timeout: 10000 }
+    );
+  };
 
   const limpiarFiltros = () => {
     setNivel("");
     setModalidad("");
     setHorario("");
     setSoloGratis(false);
+    setUbicacion(null);
   };
 
   const eventosFiltrados = eventos.filter((evento) =>
@@ -102,6 +136,29 @@ function Home() {
                 ))}
               </select>
             </div>
+            <div style={styles.filterGroup}>
+              <label style={styles.filterLabel}>Ubicación</label>
+              <button
+                type="button"
+                style={ubicacion ? styles.geoActive : styles.geoButton}
+                onClick={alternarUbicacion}
+                disabled={buscandoUbicacion}
+              >
+                {buscandoUbicacion
+                  ? "Obteniendo ubicación..."
+                  : ubicacion
+                  ? "Cerca de mí (activo, toca para quitar)"
+                  : "Usar mi ubicación"}
+              </button>
+              {errorUbicacion && <p style={styles.geoError}>{errorUbicacion}</p>}
+              {ubicacion && (
+                <select style={styles.select} value={radioKm} onChange={(e) => setRadioKm(Number(e.target.value))}>
+                  {[1, 3, 5, 10, 20].map((km) => (
+                    <option key={km} value={km}>Radio de {km} km</option>
+                  ))}
+                </select>
+              )}
+            </div>
             <label style={styles.checkRow}>
               <input type="checkbox" checked={soloGratis} onChange={(e) => setSoloGratis(e.target.checked)} />
               Solo actividades gratuitas
@@ -145,6 +202,9 @@ function Home() {
                 <p style={styles.cardInfo}>📍 {evento.direccionTexto}</p>
                 <p style={styles.cardInfo}>
                   💰 {evento.precio === 0 ? "Gratis" : `$${evento.precio} CLP`} · {evento.nivel}
+                  {evento.distanciaMetros !== undefined && (
+                    <p style={styles.cardInfo}>🧭 a {(evento.distanciaMetros / 1000).toFixed(1)} km de ti</p>
+                  )}
                 </p>
               </div>
             </div>
@@ -256,6 +316,27 @@ const styles = {
   },
   cardTitle: { fontSize: "16px", margin: "0 0 8px 0", color: "#222" },
   cardInfo: { fontSize: "13px", color: "#666", margin: "4px 0" },
+  geoButton: {
+    padding: "10px",
+    borderRadius: "8px",
+    border: "1px solid #D3A47D",
+    background: "white",
+    color: "#D3A47D",
+    cursor: "pointer",
+    fontWeight: "bold",
+    fontFamily: "'Poppins', Arial, sans-serif",
+  },
+  geoActive: {
+    padding: "10px",
+    borderRadius: "8px",
+    border: "1px solid #D3A47D",
+    background: "#D3A47D",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: "bold",
+    fontFamily: "'Poppins', Arial, sans-serif",
+  },
+  geoError: { color: "#c0392b", fontSize: "12px", margin: 0 },
 };
 
 export default Home;
