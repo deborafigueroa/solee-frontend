@@ -130,6 +130,13 @@ function DetalleEvento() {
   const yaComenzo = new Date(evento.fechaInicio) <= new Date();
   const precioTexto = evento.precio === 0 ? "Gratis" : `$${evento.precio} CLP`;
 
+  const avisoEstado =
+    evento.estado === "borrador"
+      ? "Vista previa: este borrador aún no es visible para el público."
+      : evento.estado === "pausada"
+      ? "Esta actividad está pausada y no aparece en las búsquedas."
+      : "";
+
   let accion;
   if (!esParticipante) {
     accion = <p style={styles.hint}>Solo las cuentas de participante pueden reservar actividades.</p>;
@@ -140,6 +147,8 @@ function DetalleEvento() {
         <button style={styles.linkBtn} onClick={() => navigate("/mis-reservas")}>Ver mis reservas</button>
       </div>
     );
+  } else if (evento.estado !== "activa") {
+    accion = <button style={styles.joinDisabled} disabled>Actividad no disponible</button>;  
   } else if (yaComenzo) {
     accion = <button style={styles.joinDisabled} disabled>La actividad ya comenzó</button>;
   } else if (sinCupos) {
@@ -197,6 +206,7 @@ function DetalleEvento() {
         <button style={styles.backButton} onClick={() => navigate("/home")}>
           ← Volver
         </button>
+        {avisoEstado && <div style={styles.previewBanner}>{avisoEstado}</div>}
 
         <div style={styles.content}>
           <span style={styles.badge}>{evento.disciplina}</span>
@@ -272,6 +282,7 @@ const styles = {
   linkBtn: { background: "none", border: "none", color: "#1e7e34", fontWeight: "bold", cursor: "pointer", textDecoration: "underline", fontFamily: font },
   joinButton: { width: "100%", padding: "14px", borderRadius: "8px", border: "none", background: "#F19195", color: "white", fontSize: "16px", fontWeight: "bold", cursor: "pointer", fontFamily: font },
   joinDisabled: { width: "100%", padding: "14px", borderRadius: "8px", border: "none", background: "#ddd", color: "#888", fontSize: "16px", fontWeight: "bold", cursor: "not-allowed", fontFamily: font },
+  previewBanner: { margin: "12px 16px 0", background: "#fff3cd", color: "#997404", borderRadius: "8px", padding: "10px 14px", fontSize: "13px" },
 };
 
 export default DetalleEvento;

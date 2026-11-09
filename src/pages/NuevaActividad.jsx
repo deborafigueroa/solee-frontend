@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import SelectorUbicacion from "../components/SelectorUbicacion";
@@ -19,10 +19,12 @@ function NuevaActividad() {
   const { id } = useParams();
   const editando = Boolean(id);
   const navigate = useNavigate();
+  const accionRef = useRef("publicar");
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [cargando, setCargando] = useState(editando);
   const [titularidad, setTitularidad] = useState(false);
+  const [estadoActual, setEstadoActual] = useState(null);
   const [punto, setPunto] = useState(null);
   const [form, setForm] = useState({
     titulo: "",
@@ -44,6 +46,7 @@ function NuevaActividad() {
       try {
         const { data: a } = await api.get(`/actividades/${id}`);
         const coords = a.ubicacion?.coordinates;
+        setEstadoActual(a.estado);
         setPunto(Array.isArray(coords) && coords.length === 2 ? { lat: coords[1], lng: coords[0] } : null);
         setForm({
           titulo: a.titulo,
@@ -70,13 +73,15 @@ function NuevaActividad() {
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const usaMapa = form.modalidad !== "virtual";
+  const puedeBorrador = !editando || estadoActual === "borrador";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    const publicando = accionRef.current === "publicar";
 
-    if (!editando && !titularidad) {
-      setError("Debes confirmar la declaración de titularidad del contenido.");
+    if (puedeBorrador && publicando && !titularidad) {
+      setError("Debes confirmar la declaración de titularidad del contenido para publicar.");
       return;
     }
     if (new Date(form.fechaFin) < new Date(form.fechaInicio)) {
@@ -87,6 +92,10 @@ function NuevaActividad() {
       setError("Marca la ubicación de la actividad en el mapa.");
       return;
     }
+
+    let estado;
+    if (!editando) estado = publicando ? "activa" : "borrador";
+    else if (estadoActual === "borrador" && publicando) estado = "activa";
 
     const payload = {
       titulo: form.titulo,
@@ -102,6 +111,7 @@ function NuevaActividad() {
       fechaInicio: new Date(form.fechaInicio).toISOString(),
       fechaFin: new Date(form.fechaFin).toISOString(),
       horario: form.horario,
+      ...(estado ? { estado } : {}),
     };
 
     setEnviando(true);
@@ -143,6 +153,8 @@ function NuevaActividad() {
     );
   }
 
+  const titulo = !editando ? "Nueva actividad" : estadoActual === "borrador" ? "Editar borrador" : "Editar actividad";
+
   return (
     <>
       <Header />
@@ -150,7 +162,7 @@ function NuevaActividad() {
         <button style={styles.backButton} onClick={() => navigate("/panel-organizador")}>
           ← Volver al panel
         </button>
-        <h1 style={styles.title}>{editando ? "Editar actividad" : "Nueva actividad"}</h1>
+        <h1 style={styles.title}>{titulo}</h1>
 
         <form onSubmit={handleSubmit} style={styles.form}>
           {campo("Título", <input style={styles.input} name="titulo" maxLength={120} required value={form.titulo} onChange={handleChange} />)}
@@ -179,7 +191,7 @@ function NuevaActividad() {
           {campo("Inicio", <input style={styles.input} type="datetime-local" name="fechaInicio" required value={form.fechaInicio} onChange={handleChange} />)}
           {campo("Término", <input style={styles.input} type="datetime-local" name="fechaFin" required value={form.fechaFin} onChange={handleChange} />)}
 
-          {!editando && (
+          {puedeBorrador && (
             <label style={styles.check}>
               <input type="checkbox" checked={titularidad} onChange={(e) => setTitularidad(e.target.checked)} />
               Declaro ser titular del contenido publicado (Ley 17.336)
@@ -188,9 +200,40 @@ function NuevaActividad() {
 
           {error && <p style={styles.error}>{error}</p>}
 
-          <button type="submit" style={styles.submit} disabled={enviando}>
-            {enviando ? "Guardando..." : editando ? "Guardar cambios" : "Publicar actividad"}
-          </button>
+          {puedeBorrador ? (
+            <>
+              <div style={styles.buttonsRow}>
+                <button
+                  type="submit"
+                  style={styles.draft}
+                  disabled={enviando}
+                  onClick={() => (accionRef.current = "borrador")}
+                >
+                  Guardar como borrador
+                </button>
+                <button
+                  type="submit"
+                  style={styles.submit}
+                  disabled={enviando}
+                  onClick={() => (accionRef.current = "publicar")}
+                >
+                  {enviando ? "Guardando..." : "Publicar actividad"}
+                </button>
+              </div>
+              <p style={styles.note}>
+                Un borrador no es visible para el público. Puedes revisarlo con "Ver como participante" desde tu panel y publicarlo cuando esté lista.
+              </p>
+            </>
+          ) : (
+            <button
+              type="submit"
+              style={styles.submit}
+              disabled={enviando}
+              onClick={() => (accionRef.current = "publicar")}
+            >
+              {enviando ? "Guardando..." : "Guardar cambios"}
+            </button>
+          )}
         </form>
       </div>
     </>
@@ -208,7 +251,10 @@ const styles = {
   input: { padding: "10px", borderRadius: "8px", border: "1px solid #ccc", fontSize: "14px", fontFamily: font, boxSizing: "border-box", width: "100%" },
   check: { display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#444" },
   error: { color: "#c0392b", fontSize: "13px", margin: 0 },
-  submit: { padding: "14px", borderRadius: "8px", border: "none", background: "#F19195", color: "white", fontSize: "16px", fontWeight: "bold", cursor: "pointer", fontFamily: font },
+  buttonsRow: { display: "flex", gap: "10px", flexWrap: "wrap" },
+  draft: { flex: 1, minWidth: "160px", padding: "14px", borderRadius: "8px", border: "1px solid #D3A47D", background: "white", color: "#D3A47D", fontSize: "15px", fontWeight: "bold", cursor: "pointer", fontFamily: font },
+  submit: { flex: 1, minWidth: "160px", padding: "14px", borderRadius: "8px", border: "none", background: "#F19195", color: "white", fontSize: "15px", fontWeight: "bold", cursor: "pointer", fontFamily: font },
+  note: { fontSize: "12px", color: "#888", margin: 0 },
 };
 
 export default NuevaActividad;

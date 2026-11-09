@@ -11,7 +11,7 @@ const secciones = [
   },
   {
     titulo: "3. Para qué los usamos",
-    texto: "Para crear y gestionar tu cuenta, evitar cuentas duplicadas mediante el RUT, mostrarte actividades acordes a tu perfil, enviarte notificaciones sobre tus intereses cuando esa función esté disponible y mantener la seguridad de la plataforma. No vendemos ni cedemos tus datos a terceros.",
+    texto: "Para crear y gestionar tu cuenta, evitar cuentas duplicadas mediante el RUT, mostrarte actividades acordes a tu perfil, enviarte notificaciones sobre tus intereses cuando esa función esté disponible y mantener la seguridad de la plataforma. No vendemos ni cedemos tus datos a terceros. Cuando reservas una actividad, el organizador recibe tu nombre y tu correo para coordinarla.",
   },
   {
     titulo: "4. Tu consentimiento",
