@@ -49,6 +49,10 @@ const secciones = [
     titulo: "12. Ubicación y mapas",
     texto: "Si autorizas el acceso a la ubicación de tu dispositivo, la usamos solo mientras navegas para mostrarte las actividades cercanas y su distancia, y no la guardamos en tu cuenta. Puedes retirar el permiso en la configuración de tu navegador. Cuando un organizador publica una actividad presencial, la ubicación que marca en el mapa se muestra públicamente, junto con un enlace para llegar. Para mostrar mapas y ubicar direcciones usamos servicios de OpenStreetMap, a los que se envían las direcciones y los puntos que se buscan.",
   },
+  {
+    titulo: "13. Notificaciones",
+    texto: "Si activas las notificaciones, guardamos un identificador de tu dispositivo y las disciplinas que elijas, para avisarte de actividades nuevas, de tus reservas y de cambios en las actividades en que estás inscrito. Los organizadores reciben avisos de las reservas de sus actividades, sin datos personales de quien reserva. Para entregarlas usamos Firebase Cloud Messaging, un servicio de Google. Puedes desactivarlas cuando quieras desde la pantalla de notificaciones o desde la configuración de tu navegador.",
+  },
 ];
 
 function Privacidad() {
