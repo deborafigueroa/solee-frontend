@@ -25,7 +25,8 @@ function NuevaActividad() {
   const [cargando, setCargando] = useState(editando);
   const [titularidad, setTitularidad] = useState(false);
   const [estadoActual, setEstadoActual] = useState(null);
-  const [punto, setPunto] = useState(null);
+  const [ubi, setUbi] = useState({ direccion: "", punto: null, sincronizada: false });
+  const [instrucciones, setInstrucciones] = useState("");
   const [form, setForm] = useState({
     titulo: "",
     descripcion: "",
@@ -34,7 +35,6 @@ function NuevaActividad() {
     modalidad: "presencial",
     precio: 0,
     cupoMaximo: 20,
-    direccionTexto: "",
     fechaInicio: "",
     fechaFin: "",
     horario: "tarde",
@@ -46,8 +46,10 @@ function NuevaActividad() {
       try {
         const { data: a } = await api.get(`/actividades/${id}`);
         const coords = a.ubicacion?.coordinates;
+        const punto = Array.isArray(coords) && coords.length === 2 ? { lat: coords[1], lng: coords[0] } : null;
         setEstadoActual(a.estado);
-        setPunto(Array.isArray(coords) && coords.length === 2 ? { lat: coords[1], lng: coords[0] } : null);
+        setUbi({ direccion: a.direccionTexto || "", punto, sincronizada: Boolean(punto) });
+        setInstrucciones(a.instrucciones || "");
         setForm({
           titulo: a.titulo,
           descripcion: a.descripcion,
@@ -56,7 +58,6 @@ function NuevaActividad() {
           modalidad: a.modalidad,
           precio: a.precio,
           cupoMaximo: a.cupoMaximo,
-          direccionTexto: a.direccionTexto || "",
           fechaInicio: aInputFecha(a.fechaInicio),
           fechaFin: aInputFecha(a.fechaFin),
           horario: a.horario,
@@ -88,9 +89,17 @@ function NuevaActividad() {
       setError("La fecha de término no puede ser anterior al inicio.");
       return;
     }
-    if (form.modalidad === "presencial" && !punto) {
-      setError("Marca la ubicación de la actividad en el mapa.");
-      return;
+    if (usaMapa) {
+      if (form.modalidad === "presencial" && !ubi.punto) {
+        setError("Marca la ubicación de la actividad en el mapa.");
+        return;
+      }
+      if (ubi.punto && !ubi.sincronizada) {
+        setError(
+          "La dirección escrita no coincide con el pin. Elige una sugerencia de la lista, o mueve el pin y confirma la dirección."
+        );
+        return;
+      }
     }
 
     let estado;
@@ -105,9 +114,10 @@ function NuevaActividad() {
       modalidad: form.modalidad,
       precio: Number(form.precio),
       cupoMaximo: Number(form.cupoMaximo),
-      direccionTexto: form.direccionTexto,
+      direccionTexto: ubi.direccion.trim(),
+      instrucciones: usaMapa ? instrucciones.trim() : "",
       // GeoJSON usa el orden [longitud, latitud]
-      ubicacion: usaMapa && punto ? { type: "Point", coordinates: [punto.lng, punto.lat] } : null,
+      ubicacion: usaMapa && ubi.punto ? { type: "Point", coordinates: [ubi.punto.lng, ubi.punto.lat] } : null,
       fechaInicio: new Date(form.fechaInicio).toISOString(),
       fechaFin: new Date(form.fechaFin).toISOString(),
       horario: form.horario,
@@ -173,20 +183,37 @@ function NuevaActividad() {
           {campo("Horario", select("horario", horarios))}
           {campo("Precio (CLP, 0 = gratis)", <input style={styles.input} type="number" min="0" name="precio" required value={form.precio} onChange={handleChange} />)}
           {campo("Cupo máximo", <input style={styles.input} type="number" min="1" name="cupoMaximo" required value={form.cupoMaximo} onChange={handleChange} />)}
-          {campo(
-            form.modalidad === "virtual" ? "Plataforma o enlace de referencia" : "Dirección",
-            <input style={styles.input} name="direccionTexto" required value={form.direccionTexto} onChange={handleChange} />
-          )}
 
-          {usaMapa &&
+          {usaMapa ? (
+            <>
+              {campo(
+                form.modalidad === "presencial"
+                  ? "Dirección o lugar (obligatorio, se muestra en la tarjeta de la actividad)"
+                  : "Dirección o lugar (se muestra en la tarjeta de la actividad)",
+                <SelectorUbicacion valor={ubi} onChange={setUbi} />
+              )}
+              {campo(
+                "Instrucciones para encontrar el lugar (opcional)",
+                <textarea
+                  style={{ ...styles.input, minHeight: "80px" }}
+                  maxLength={500}
+                  placeholder="Ej.: Entrada por el pasaje lateral, segundo piso, timbre 3B. A dos cuadras del metro Los Leones."
+                  value={instrucciones}
+                  onChange={(e) => setInstrucciones(e.target.value)}
+                />
+              )}
+            </>
+          ) : (
             campo(
-              `Ubicación en el mapa ${form.modalidad === "presencial" ? "(obligatoria)" : "(opcional)"}`,
-              <SelectorUbicacion
-                punto={punto}
-                onChange={setPunto}
-                onDireccion={(texto) => setForm((f) => (f.direccionTexto ? f : { ...f, direccionTexto: texto }))}
+              "Plataforma o enlace de referencia",
+              <input
+                style={styles.input}
+                required
+                value={ubi.direccion}
+                onChange={(e) => setUbi({ ...ubi, direccion: e.target.value })}
               />
-            )}
+            )
+          )}
 
           {campo("Inicio", <input style={styles.input} type="datetime-local" name="fechaInicio" required value={form.fechaInicio} onChange={handleChange} />)}
           {campo("Término", <input style={styles.input} type="datetime-local" name="fechaFin" required value={form.fechaFin} onChange={handleChange} />)}
