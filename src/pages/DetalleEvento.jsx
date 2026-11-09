@@ -232,6 +232,12 @@ function DetalleEvento() {
           ) : (
             <>
               <p style={styles.description}>📍 {evento.direccionTexto}</p>
+              {evento.instrucciones && (
+                <div style={styles.instrucciones}>
+                  <strong>Cómo encontrar el lugar</strong>
+                  <p style={styles.instruccionesTexto}>{evento.instrucciones}</p>
+                </div>
+              )}              
               {tieneUbicacion ? (
                 <>
                   <MapaUbicacion lat={lat} lng={lng} />
@@ -283,6 +289,8 @@ const styles = {
   joinButton: { width: "100%", padding: "14px", borderRadius: "8px", border: "none", background: "#F19195", color: "white", fontSize: "16px", fontWeight: "bold", cursor: "pointer", fontFamily: font },
   joinDisabled: { width: "100%", padding: "14px", borderRadius: "8px", border: "none", background: "#ddd", color: "#888", fontSize: "16px", fontWeight: "bold", cursor: "not-allowed", fontFamily: font },
   previewBanner: { margin: "12px 16px 0", background: "#fff3cd", color: "#997404", borderRadius: "8px", padding: "10px 14px", fontSize: "13px" },
+  instrucciones: { background: "#fff8e6", border: "1px solid #f0d9a0", borderRadius: "8px", padding: "10px 12px", fontSize: "13px", color: "#6b5a2a", marginBottom: "12px" },
+  instruccionesTexto: { margin: "6px 0 0", whiteSpace: "pre-line", lineHeight: "1.5" },
 };
 
 export default DetalleEvento;
