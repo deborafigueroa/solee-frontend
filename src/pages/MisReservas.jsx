@@ -38,8 +38,15 @@ function MisReservas() {
   const esProxima = (r) =>
     r.estado === "confirmada" && r.actividad && new Date(r.actividad.fechaInicio) > ahora;
 
-  const proximas = reservas.filter(esProxima);
-  const historial = reservas.filter((r) => !esProxima(r));
+  const proximas = reservas
+    .filter(esProxima)
+    .sort((a, b) => new Date(a.actividad.fechaInicio) - new Date(b.actividad.fechaInicio));
+  const historial = reservas
+    .filter((r) => !esProxima(r))
+    .sort(
+      (a, b) =>
+        new Date(b.actividad?.fechaInicio || b.creadoEn) - new Date(a.actividad?.fechaInicio || a.creadoEn)
+    );
   const visibles = pestana === "proximas" ? proximas : historial;
 
   const cancelar = async (reserva) => {
@@ -89,7 +96,7 @@ function MisReservas() {
             <div key={r._id} style={styles.card}>
               <div style={styles.cardTop}>
                 <div>
-                  <h3 style={styles.cardTitle}>{r.actividad?.titulo || "Actividad no disponible"}</h3>
+                  <h3 style={styles.cardTitle}>{r.actividad?.titulo || "Actividad no disponible"}{r.actividad?.estado === "eliminada" ? " (actividad eliminada)" : ""}</h3>
                   {r.actividad && (
                     <>
                       <p style={styles.cardInfo}>📅 {formatoFecha(r.actividad.fechaInicio)} h</p>
@@ -108,7 +115,7 @@ function MisReservas() {
               )}
 
               <div style={styles.actions}>
-                {r.actividad && (
+                {r.actividad && r.actividad.estado !== "eliminada" && (
                   <button style={styles.btn} onClick={() => navigate(`/evento/${r.actividad._id}`)}>Ver actividad</button>
                 )}
                 {esProxima(r) && (
