@@ -252,6 +252,9 @@ function Home() {
                   <p style={styles.cardInfo}>
                     💰 {evento.precio === 0 ? "Gratis" : `$${evento.precio} CLP`} · {evento.nivel}
                   </p>
+                  {evento.totalResenas > 0 && (
+                    <p style={styles.cardInfo}>⭐ {evento.calificacionPromedio} ({evento.totalResenas})</p>
+                  )}                  
                   {evento.distanciaMetros !== undefined && (
                     <p style={styles.cardInfo}>🧭 a {(evento.distanciaMetros / 1000).toFixed(1)} km de ti</p>
                   )}

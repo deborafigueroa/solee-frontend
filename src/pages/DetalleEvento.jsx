@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import Header from "../components/Header";
 import MapaUbicacion from "../components/MapaUbicacion";
 import api from "../api/axiosConfig";
+import ResenasActividad from "../components/ResenasActividad";
 
 const TZ = "America/Santiago";
 const mayuscula = (t) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -257,6 +258,9 @@ function DetalleEvento() {
           )}
 
           <div style={{ marginTop: "8px" }}>{accion}</div>
+          <div style={{ marginTop: "28px" }}>
+            <ResenasActividad actividadId={id} titulo={evento.titulo} />
+          </div>          
         </div>
       </div>
     </>

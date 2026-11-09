@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import Header from "../components/Header";
+import Estrellas from "../components/Estrellas";
+import ModalResena from "../components/ModalResena";
 import api from "../api/axiosConfig";
 
 const TZ = "America/Santiago";
@@ -19,18 +21,21 @@ function MisReservas() {
   const [aviso, setAviso] = useState("");
   const [pestana, setPestana] = useState("proximas");
   const [qrAbierto, setQrAbierto] = useState(null);
+  const [resenando, setResenando] = useState(null);
+
+  const cargar = async () => {
+    try {
+      const { data } = await api.get("/reservas/mis-reservas");
+      setReservas(data.reservas);
+      setError("");
+    } catch (err) {
+      setError("No se pudieron cargar tus reservas.");
+    } finally {
+      setCargando(false);
+    }
+  };
 
   useEffect(() => {
-    const cargar = async () => {
-      try {
-        const { data } = await api.get("/reservas/mis-reservas");
-        setReservas(data.reservas);
-      } catch (err) {
-        setError("No se pudieron cargar tus reservas.");
-      } finally {
-        setCargando(false);
-      }
-    };
     cargar();
   }, []);
 
@@ -48,6 +53,7 @@ function MisReservas() {
         new Date(b.actividad?.fechaInicio || b.creadoEn) - new Date(a.actividad?.fechaInicio || a.creadoEn)
     );
   const visibles = pestana === "proximas" ? proximas : historial;
+  const pendientes = reservas.filter((r) => r.estado === "asistió" && !r.miResena).length;
 
   const cancelar = async (reserva) => {
     setAviso("");
@@ -61,11 +67,20 @@ function MisReservas() {
     }
   };
 
+  const estiloEstado = (estado) =>
+    estado === "confirmada" || estado === "asistió" ? styles.badgeOk : styles.badgeOff;
+
   return (
     <>
       <Header />
       <div style={styles.container}>
         <h1 style={styles.title}>Mis reservas</h1>
+
+        {pendientes > 0 && (
+          <p style={styles.pendientes}>
+            Tienes {pendientes} {pendientes === 1 ? "actividad" : "actividades"} a la que asististe y aún no reseñas.
+          </p>
+        )}
 
         <div style={styles.tabs}>
           <button style={pestana === "proximas" ? styles.tabActive : styles.tab} onClick={() => setPestana("proximas")}>
@@ -96,7 +111,10 @@ function MisReservas() {
             <div key={r._id} style={styles.card}>
               <div style={styles.cardTop}>
                 <div>
-                  <h3 style={styles.cardTitle}>{r.actividad?.titulo || "Actividad no disponible"}{r.actividad?.estado === "eliminada" ? " (actividad eliminada)" : ""}</h3>
+                  <h3 style={styles.cardTitle}>
+                    {r.actividad?.titulo || "Actividad no disponible"}
+                    {r.actividad?.estado === "eliminada" ? " (actividad eliminada)" : ""}
+                  </h3>
                   {r.actividad && (
                     <>
                       <p style={styles.cardInfo}>📅 {formatoFecha(r.actividad.fechaInicio)} h</p>
@@ -104,7 +122,7 @@ function MisReservas() {
                     </>
                   )}
                 </div>
-                <span style={r.estado === "confirmada" ? styles.badgeOk : styles.badgeOff}>{r.estado}</span>
+                <span style={estiloEstado(r.estado)}>{r.estado}</span>
               </div>
 
               {qrAbierto === r._id && (
@@ -114,9 +132,27 @@ function MisReservas() {
                 </div>
               )}
 
+              {r.estado === "asistió" && r.actividad && (
+                <div style={styles.resenaBox}>
+                  {r.miResena ? (
+                    <>
+                      <Estrellas valor={r.miResena.calificacion} tamano={16} />
+                      <span style={styles.resenaTexto}>Tu reseña</span>
+                    </>
+                  ) : (
+                    <span style={styles.resenaTexto}>¿Cómo estuvo? Tu opinión ayuda a otros participantes.</span>
+                  )}
+                </div>
+              )}
+
               <div style={styles.actions}>
                 {r.actividad && r.actividad.estado !== "eliminada" && (
                   <button style={styles.btn} onClick={() => navigate(`/evento/${r.actividad._id}`)}>Ver actividad</button>
+                )}
+                {r.estado === "asistió" && r.actividad && (
+                  <button style={styles.btnPrimary} onClick={() => setResenando(r)}>
+                    {r.miResena ? "Editar reseña" : "Dejar reseña"}
+                  </button>
                 )}
                 {esProxima(r) && (
                   <>
@@ -131,6 +167,19 @@ function MisReservas() {
           ))}
         </div>
       </div>
+
+      {resenando && (
+        <ModalResena
+          actividadId={resenando.actividad._id}
+          titulo={resenando.actividad.titulo}
+          inicial={resenando.miResena}
+          alGuardar={() => {
+            setResenando(null);
+            cargar();
+          }}
+          alCerrar={() => setResenando(null)}
+        />
+      )}
     </>
   );
 }
@@ -139,6 +188,7 @@ const font = "'Poppins', Arial, sans-serif";
 const styles = {
   container: { maxWidth: "700px", margin: "0 auto", padding: "20px", fontFamily: font },
   title: { fontSize: "22px", color: "#222", margin: "0 0 16px" },
+  pendientes: { background: "#fff8e6", border: "1px solid #f0d9a0", borderRadius: "8px", padding: "10px 14px", fontSize: "13px", color: "#6b5a2a", margin: "0 0 14px" },
   tabs: { display: "flex", gap: "8px", marginBottom: "18px" },
   tab: { padding: "8px 18px", borderRadius: "20px", border: "1px solid #ccc", background: "white", color: "#666", cursor: "pointer", fontFamily: font },
   tabActive: { padding: "8px 18px", borderRadius: "20px", border: "1px solid #F19195", background: "#F19195", color: "white", fontWeight: "bold", cursor: "pointer", fontFamily: font },
@@ -150,12 +200,15 @@ const styles = {
   cardTop: { display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "flex-start" },
   cardTitle: { fontSize: "15px", margin: "0 0 6px", color: "#222" },
   cardInfo: { fontSize: "13px", color: "#666", margin: "2px 0" },
-  badgeOk: { background: "#e6f4ea", color: "#1e7e34", padding: "4px 12px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold" },
-  badgeOff: { background: "#eee", color: "#777", padding: "4px 12px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold" },
+  badgeOk: { background: "#e6f4ea", color: "#1e7e34", padding: "4px 12px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold", whiteSpace: "nowrap" },
+  badgeOff: { background: "#eee", color: "#777", padding: "4px 12px", borderRadius: "12px", fontSize: "12px", fontWeight: "bold", whiteSpace: "nowrap" },
   qrBox: { textAlign: "center", margin: "14px 0 4px" },
   qrText: { fontSize: "12px", color: "#888", margin: "6px 0 0" },
+  resenaBox: { display: "flex", alignItems: "center", gap: "8px", margin: "12px 0 0" },
+  resenaTexto: { fontSize: "12px", color: "#666" },
   actions: { display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "12px" },
   btn: { padding: "6px 12px", borderRadius: "8px", border: "1px solid #D3A47D", background: "white", color: "#D3A47D", cursor: "pointer", fontSize: "12px", fontFamily: font },
+  btnPrimary: { padding: "6px 12px", borderRadius: "8px", border: "none", background: "#F19195", color: "white", cursor: "pointer", fontSize: "12px", fontWeight: "bold", fontFamily: font },
   btnDanger: { padding: "6px 12px", borderRadius: "8px", border: "1px solid #c0392b", background: "white", color: "#c0392b", cursor: "pointer", fontSize: "12px", fontFamily: font },
 };
 
