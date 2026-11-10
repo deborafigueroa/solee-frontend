@@ -20,6 +20,7 @@ const reservados = (a) => a.cupoMaximo - a.cuposDisponibles;
 function PanelOrganizador() {
   const navigate = useNavigate();
   const [actividades, setActividades] = useState([]);
+  const [vistas, setVistas] = useState({ vistasTotales: 0, porActividad: {} });
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState(null);
@@ -28,8 +29,14 @@ function PanelOrganizador() {
   useEffect(() => {
     const cargar = async () => {
       try {
-        const response = await api.get("/actividades/mis-actividades");
-        setActividades(response.data.actividades);
+        const [respuesta, resumen] = await Promise.all([
+          api.get("/actividades/mis-actividades"),
+          api
+            .get("/analiticas/organizador")
+            .catch(() => ({ data: { vistasTotales: 0, porActividad: {} } })),
+        ]);
+        setActividades(respuesta.data.actividades);
+        setVistas(resumen.data);
       } catch (err) {
         setError("No se pudieron cargar tus actividades.");
       } finally {
@@ -73,7 +80,6 @@ function PanelOrganizador() {
   const cuposTotales = publicadas.reduce((acc, a) => acc + a.cupoMaximo, 0);
   const cuposReservados = publicadas.reduce((acc, a) => acc + reservados(a), 0);
   const ocupacion = cuposTotales > 0 ? Math.round((cuposReservados / cuposTotales) * 100) : 0;
-  const nBorradores = actividades.filter((a) => a.estado === "borrador").length;
   const nActivas = actividades.filter((a) => a.estado === "activa").length;
 
   const visibles = filtro === "todas" ? actividades : actividades.filter((a) => a.estado === filtro);
@@ -94,20 +100,20 @@ function PanelOrganizador() {
 
         <div style={styles.statsRow}>
           <div style={styles.statCard}>
-            <p style={styles.statNumber}>{nActivas}</p>
-            <p style={styles.statLabel}>Activas</p>
-          </div>
-          <div style={styles.statCard}>
-            <p style={styles.statNumber}>{nBorradores}</p>
-            <p style={styles.statLabel}>Borradores</p>
+            <p style={styles.statNumber}>{vistas.vistasTotales}</p>
+            <p style={styles.statLabel}>Visualizaciones</p>
           </div>
           <div style={styles.statCard}>
             <p style={styles.statNumber}>{cuposReservados}</p>
-            <p style={styles.statLabel}>Cupos reservados</p>
+            <p style={styles.statLabel}>Reservas activas</p>
           </div>
           <div style={styles.statCard}>
             <p style={styles.statNumber}>{ocupacion}%</p>
-            <p style={styles.statLabel}>Ocupación</p>
+            <p style={styles.statLabel}>Tasa de ocupación</p>
+          </div>
+          <div style={styles.statCard}>
+            <p style={styles.statNumber}>{nActivas}</p>
+            <p style={styles.statLabel}>Actividades activas</p>
           </div>
         </div>
 
@@ -142,6 +148,7 @@ function PanelOrganizador() {
             const pct = act.cupoMaximo > 0 ? Math.round((res / act.cupoMaximo) * 100) : 0;
             const terminada = new Date(act.fechaFin) < new Date();
             const esBorrador = act.estado === "borrador";
+            const nVistas = vistas.porActividad[act._id] || 0;
 
             return (
               <div key={act._id} style={styles.card}>
@@ -164,7 +171,9 @@ function PanelOrganizador() {
                       <div style={{ ...styles.barraRelleno, width: `${pct}%` }} />
                     </div>
                     <p style={styles.cupoTexto}>
-                      {res} de {act.cupoMaximo} cupos reservados · {act.cuposDisponibles === 0 ? "agotada" : `${act.cuposDisponibles} disponibles`}
+                      {res} de {act.cupoMaximo} cupos reservados ·{" "}
+                      {act.cuposDisponibles === 0 ? "agotada" : `${act.cuposDisponibles} disponibles`} · 👁{" "}
+                      {nVistas} {nVistas === 1 ? "visualización" : "visualizaciones"}
                     </p>
                   </div>
                 )}
@@ -177,7 +186,7 @@ function PanelOrganizador() {
                     </button>
                   )}
                   <button style={styles.btn} onClick={() => navigate(`/editar-actividad/${act._id}`)}>Editar</button>
-                  <button style={styles.btn} onClick={() => navigate(`/duplicar-actividad/${act._id}`)}>Duplicar</button>                  
+                  <button style={styles.btn} onClick={() => navigate(`/duplicar-actividad/${act._id}`)}>Duplicar</button>
                   {esBorrador ? (
                     <button style={styles.btnPrimary} onClick={() => cambiarEstado(act, "activa")}>Publicar</button>
                   ) : (

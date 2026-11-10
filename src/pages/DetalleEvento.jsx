@@ -76,6 +76,16 @@ function DetalleEvento() {
     };
     buscarReserva();
   }, [id, esParticipante]);
+  
+  // Cuenta la visualización una vez cada 30 minutos por actividad
+  useEffect(() => {
+    if (!esParticipante) return;
+    const clave = `solee_vista_${id}`;
+    const ultima = Number(sessionStorage.getItem(clave) || 0);
+    if (Date.now() - ultima < 30 * 60 * 1000) return;
+    sessionStorage.setItem(clave, String(Date.now()));
+    api.post("/analiticas/vistas", { actividadId: id }).catch(() => {});
+  }, [id, esParticipante]);
 
   const cerrarModal = () => {
     setModalAbierto(false);

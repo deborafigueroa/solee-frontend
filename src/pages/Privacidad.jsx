@@ -53,6 +53,10 @@ const secciones = [
     titulo: "13. Notificaciones",
     texto: "Si activas las notificaciones, guardamos un identificador de tu dispositivo y las disciplinas que elijas, para avisarte de actividades nuevas, de tus reservas y de cambios en las actividades en que estás inscrito. Los organizadores reciben avisos de las reservas de sus actividades, sin datos personales de quien reserva. Para entregarlas usamos Firebase Cloud Messaging, un servicio de Google. Puedes desactivarlas cuando quieras desde la pantalla de notificaciones o desde la configuración de tu navegador.",
   },
+  {
+    titulo: "14. Estadísticas de visitas",
+    texto: "Cuando un participante abre una actividad, registramos la visita con un código derivado de su cuenta que no permite identificarlo, y el tipo de dispositivo. Los organizadores solo ven totales de visualizaciones de sus propias actividades, nunca quién las vio.",
+  },
 ];
 
 function Privacidad() {
