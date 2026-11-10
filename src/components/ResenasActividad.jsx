@@ -3,7 +3,7 @@ import api from "../api/axiosConfig";
 import Estrellas from "./Estrellas";
 import ModalResena from "./ModalResena";
 
-const fecha = (iso) =>
+const formato = (iso) =>
   new Date(iso).toLocaleDateString("es-CL", {
     day: "numeric", month: "long", year: "numeric", timeZone: "America/Santiago",
   });
@@ -35,10 +35,17 @@ function ResenasActividad({ actividadId, titulo }) {
       <h3 style={styles.title}>Reseñas</h3>
 
       {datos.total > 0 ? (
-        <p style={styles.resumen}>
-          <Estrellas valor={datos.promedio} tamano={18} /> <strong>{datos.promedio}</strong> de 5 ·{" "}
-          {datos.total} {datos.total === 1 ? "reseña" : "reseñas"}
-        </p>
+        <>
+          <p style={styles.resumen}>
+            <Estrellas valor={datos.promedio} tamano={18} /> <strong>{datos.promedio}</strong> de 5 ·{" "}
+            {datos.total} {datos.total === 1 ? "reseña" : "reseñas"}
+          </p>
+          {datos.ediciones > 1 && (
+            <p style={styles.serie}>
+              Calificación de esta actividad en sus {datos.ediciones} fechas, incluida la de hoy y las anteriores.
+            </p>
+          )}
+        </>
       ) : (
         <p style={styles.vacio}>Aún no hay reseñas.</p>
       )}
@@ -56,8 +63,11 @@ function ResenasActividad({ actividadId, titulo }) {
               <strong style={styles.autor}>{r.autor}</strong>
               <Estrellas valor={r.calificacion} tamano={14} />
             </div>
+            {!r.deEstaFecha && r.fechaActividad && (
+              <p style={styles.edicion}>Edición del {formato(r.fechaActividad)}</p>
+            )}
             {r.comentario && <p style={styles.comentario}>{r.comentario}</p>}
-            <p style={styles.fecha}>{fecha(r.creadoEn)}</p>
+            <p style={styles.fecha}>{formato(r.creadoEn)}</p>
           </div>
         ))}
       </div>
@@ -81,13 +91,15 @@ function ResenasActividad({ actividadId, titulo }) {
 const font = "'Poppins', Arial, sans-serif";
 const styles = {
   title: { fontSize: "16px", color: "#333", margin: "0 0 8px", fontFamily: font },
-  resumen: { fontSize: "14px", color: "#555", margin: "0 0 12px", fontFamily: font },
+  resumen: { fontSize: "14px", color: "#555", margin: "0 0 4px", fontFamily: font },
+  serie: { fontSize: "12px", color: "#888", margin: "0 0 12px", fontFamily: font },
   vacio: { fontSize: "13px", color: "#888", margin: "0 0 12px", fontFamily: font },
   boton: { padding: "10px 16px", borderRadius: "8px", border: "1px solid #D3A47D", background: "white", color: "#D3A47D", fontWeight: "bold", cursor: "pointer", fontFamily: font, marginBottom: "14px" },
   lista: { display: "flex", flexDirection: "column", gap: "10px" },
   tarjeta: { background: "white", borderRadius: "10px", padding: "12px 14px", boxShadow: "0 2px 6px rgba(0,0,0,0.06)", fontFamily: font },
   cabecera: { display: "flex", justifyContent: "space-between", alignItems: "center" },
   autor: { fontSize: "13px", color: "#222" },
+  edicion: { fontSize: "11px", color: "#D3A47D", fontWeight: "bold", margin: "4px 0 0" },
   comentario: { fontSize: "13px", color: "#555", lineHeight: "1.5", margin: "8px 0 0", whiteSpace: "pre-line" },
   fecha: { fontSize: "11px", color: "#999", margin: "8px 0 0" },
 };
