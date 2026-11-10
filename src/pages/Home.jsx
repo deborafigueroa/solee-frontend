@@ -9,6 +9,7 @@ const niveles = ["", "principiante", "intermedio", "avanzado", "todos los nivele
 const modalidades = ["", "presencial", "virtual", "híbrida"];
 const horarios = ["", "mañana", "tarde", "noche", "fin de semana"];
 
+
 const CLAVE_APAGADA = "solee_ubicacion_apagada";
 
 function Home() {
@@ -28,8 +29,9 @@ function Home() {
   const [eventos, setEventos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
+  const [calificacionMin, setCalificacionMin] = useState("");  
 
-  const filtrosActivos = [nivel, modalidad, horario, soloGratis].filter(Boolean).length;
+  const filtrosActivos = [nivel, modalidad, horario, soloGratis, calificacionMin].filter(Boolean).length;
 
   const obtenerUbicacion = () => {
     if (!navigator.geolocation) {
@@ -87,6 +89,7 @@ function Home() {
         if (modalidad) params.modalidad = modalidad;
         if (horario) params.horario = horario;
         if (soloGratis) params.precioMax = 0;
+        if (calificacionMin) params.calificacionMin = calificacionMin;        
         if (ubicacion) {
           params.lat = ubicacion.lat;
           params.lng = ubicacion.lng;
@@ -102,13 +105,14 @@ function Home() {
       }
     };
     buscarEventos();
-  }, [categoriaActiva, nivel, modalidad, horario, soloGratis, ubicacion, radioKm]);
+  }, [categoriaActiva, nivel, modalidad, horario, soloGratis, calificacionMin, ubicacion, radioKm]);
 
   const limpiarFiltros = () => {
     setNivel("");
     setModalidad("");
     setHorario("");
     setSoloGratis(false);
+    setCalificacionMin("");    
   };
 
   const eventosFiltrados = eventos.filter((evento) =>
@@ -191,6 +195,16 @@ function Home() {
                 ))}
               </select>
             </div>
+            <div style={styles.filterGroup}>
+              <label style={styles.filterLabel}>Calificación mínima</label>
+              <select style={styles.select} value={calificacionMin} onChange={(e) => setCalificacionMin(e.target.value)}>
+                <option value="">Cualquiera</option>
+                <option value="3">3 estrellas o más</option>
+                <option value="4">4 estrellas o más</option>
+                <option value="4.5">4,5 estrellas o más</option>
+              </select>
+              {calificacionMin && <p style={styles.geoError}>Se muestran solo actividades que tienen reseñas.</p>}
+            </div>            
             <label style={styles.checkRow}>
               <input type="checkbox" checked={soloGratis} onChange={(e) => setSoloGratis(e.target.checked)} />
               Solo actividades gratuitas
