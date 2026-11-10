@@ -19,7 +19,7 @@ const secciones = [
   },
   {
     titulo: "5. Tus derechos",
-    texto: "Puedes solicitar el acceso a tus datos, su rectificación, su eliminación y oponerte a su tratamiento. Escríbenos al correo de contacto y responderemos tu solicitud.",
+    texto: "Puedes solicitar el acceso a tus datos, su rectificación, su eliminación y oponerte a su tratamiento. Escríbenos al correo de contacto y responderemos tu solicitud. Desde 'Mi perfil' puedes ver y corregir parte de tus datos y cambiar tu contraseña.",
   },
   {
     titulo: "6. Conservación y seguridad",

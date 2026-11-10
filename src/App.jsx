@@ -11,6 +11,7 @@ import ReservasActividad from "./pages/ReservasActividad";
 import Notificaciones from "./pages/Notificaciones";
 import RutaProtegida from "./components/RutaProtegida";
 import AvisosPush from "./components/AvisosPush";
+import Perfil from "./pages/Perfil";
 
 function App() {
   return (
@@ -50,7 +51,11 @@ function App() {
           path="/duplicar-actividad/:id"
           element={<RutaProtegida rol="organizador"><NuevaActividad modo="duplicar" /></RutaProtegida>}
         />
+        <Route 
+        path="/perfil" 
+        element={<RutaProtegida><Perfil /></RutaProtegida>} />
       </Routes>
+      
     </BrowserRouter>
   );
 }
