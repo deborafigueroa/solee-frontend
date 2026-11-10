@@ -177,6 +177,7 @@ function PanelOrganizador() {
                     </button>
                   )}
                   <button style={styles.btn} onClick={() => navigate(`/editar-actividad/${act._id}`)}>Editar</button>
+                  <button style={styles.btn} onClick={() => navigate(`/duplicar-actividad/${act._id}`)}>Duplicar</button>                  
                   {esBorrador ? (
                     <button style={styles.btnPrimary} onClick={() => cambiarEstado(act, "activa")}>Publicar</button>
                   ) : (

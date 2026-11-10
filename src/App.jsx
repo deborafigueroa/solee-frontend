@@ -46,6 +46,10 @@ function App() {
           path="/actividad/:id/inscritos"
           element={<RutaProtegida rol="organizador"><ReservasActividad /></RutaProtegida>}
         />
+        <Route
+          path="/duplicar-actividad/:id"
+          element={<RutaProtegida rol="organizador"><NuevaActividad modo="duplicar" /></RutaProtegida>}
+        />
       </Routes>
     </BrowserRouter>
   );
